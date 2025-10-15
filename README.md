@@ -1,0 +1,2 @@
+Chat Thingのユーザー情報取り込みテストです。
+ChatGPTのCodex機能のテストも兼ねてます。
