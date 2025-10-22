@@ -182,10 +182,10 @@
         }
 
         const greetingTarget = name || "ゲスト";
-        const lines = [`こんにちは！${greetingTarget}さん！`];
+        const lines = [`氏名［${greetingTarget}］`];
 
         if (email || id) {
-          lines.push(`あなたのIDは${email || id}ですね！`);
+          lines.push(`WEBLIFE ID［${email || id}］`);
         }
 
         return lines.join("\n");
