@@ -22,8 +22,8 @@
       このページは、Chat Thing の SDK（<code>window.chatThing</code>）を利用して仮ユーザー情報を
       チャットの最初のメッセージとして自動送信する挙動を確認するためのテストページです。<br />
       仮ユーザー：
-      <strong data-chatthing-user-name>テストユーザー</strong>
-      （メール: <strong data-chatthing-user-email>kouki.test.1115@gmail.com</strong>）
+      <strong id="chatthing-username">テストユーザー</strong>
+      （メール: <strong id="chatthing-email">kouki.test.1115@gmail.com</strong>）
     </p>
     <p>
       コンソールを開いて、<code>[ChatThing] intro message sent:</code> のログと送信メッセージを確認してください。<br />
@@ -165,15 +165,15 @@
   <!-- 3) Widgetをユーザーが展開したタイミングで、ページ上のユーザー情報を最初のメッセージとして自動送信 -->
   <script>
     (function setupUserInfoMessage({ maxRetries = 100, delayMs = 120 } = {}) {
-      const readText = (selector) => {
-        const element = document.querySelector(selector);
+      const readTextById = (id) => {
+        const element = document.getElementById(id);
         return element?.textContent?.trim() ?? "";
       };
 
       const buildIntroMessage = () => {
-        const name = readText("[data-chatthing-user-name]");
-        const email = readText("[data-chatthing-user-email]");
-        const id = readText("[data-chatthing-user-id]") || email;
+        const name = readTextById("chatthing-username");
+        const email = readTextById("chatthing-email");
+        const id = email;
 
         if (!name && !email && !id) {
           return "";
