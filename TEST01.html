@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  />
+  <title>Chat Thing ユーザー情報メッセージ送信テスト</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", sans-serif; padding: 24px; }
+    .card { max-width: 900px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; }
+    h1 { margin: 0 0 12px; font-size: 20px; }
+    p { color: #374151; line-height: 1.6; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Chat Thing ユーザー情報メッセージ送信テスト</h1>
+    <p>
+      このページは、Chat Thing の SDK（<code>window.chatThing</code>）を利用して仮ユーザー情報を
+      チャットの最初のメッセージとして自動送信する挙動を確認するためのテストページです。<br />
+      仮ユーザー：
+      <strong id="chatthing-username">テストユーザー</strong>
+      （メール: <strong id="chatthing-email">kouki.test.1115@gmail.com</strong>）
+    </p>
+    <p>
+      コンソールを開いて、<code>[ChatThing] intro message sent:</code> のログと送信メッセージを確認してください。<br />
+      ウィジェットを開くと、既にユーザー情報が入力された状態で会話が開始されます。
+    </p>
+  </div>
+
+  <!-- 1) Chat ThingのWidget設定（スタイル・言語・初期メッセージなど本番に近い設定） -->
+  <script>
+    window.chatThingConfig = {
+      // スタイル調整（CSSカスタマイズ）
+      css: {
+        /* ウィジェットのトリガー ボタンに適用される CSS */
+        widget: `
+        position: fixed;
+        z-index: 999;
+        height: 64px;
+        width: 64px;
+        border-radius: 100%;
+        bottom: 20px;
+        right: 20px;
+        background: rgb(255, 138, 102);
+        color: rgb(255, 255, 255);
+        box-shadow: 0px 0px 8px rgba(0,0,0,0.2);
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        overflow: hidden;
+        padding: 0px;
+      `,
+        /* Widgetアイコンに設定した画像のサイズ */
+        customAssistantIcon: `
+        width: 64px;
+        height: 64px;
+      `,
+        /* 展開したフォームのサイズ */
+        window: `
+        position: fixed;
+        z-index: 50;
+        bottom: 100px;
+        right: 20px;
+        width: calc(100vw - 40px);
+        height: calc(100vh - 100px);
+        max-width: 800px;
+        max-height: 600px;
+        border-radius: 8px;
+        box-shadow: 0px 0px 8px rgba(0,0,0,0.2);
+        overflow: hidden;
+      `,
+        /* 展開したフォームのサイズ */
+        iframe: `
+        height: 100%;
+        width: 100%;
+        border: 0;
+      `,
+        /* 吹き出しの配置や速度 */
+        messagePreviewContainer: `
+        position: fixed;
+        z-index: 999;
+        bottom: 100px;
+        right: 20px;
+        transform: translateX(350px);
+        max-width: 320px;
+        display: flex;
+        flex-direction: column;
+        align-items: end;
+        gap: 10px;
+        margin-left: 20px;
+        transition: transform 0.4s ease-out;
+      `,
+        /* 吹き出しのカラーやサイズ */
+        messagePreviewBox: `
+        border-radius: 8px;
+        background: #ffffff;
+        color: #363636;
+        box-shadow: 0px 0px 8px rgba(0,0,0,0.2);
+        padding: 12px;
+        display: flex;
+        gap: 0;
+        cursor: pointer;
+      `,
+        /* 吹き出しの閉じるボタン アイコンに適用される CSS */
+        messagePreviewCloseIcon: `
+        width: 20px;
+        aspect-ratio: 1;
+        color: white;
+      `,
+        /* 吹き出しの中に表示されるアイコン */
+        messagePreviewIconWrapper: `width: 0px;`
+      },
+
+      // カラー設定（メインカラーと反転カラー）
+      colour: {
+        primaryColour: "rgb(255, 138, 102)",
+        primaryColourInverted: "rgb(17 24 39)"
+      },
+
+      // SVG形式のウィジェットアイコン
+      svg: {
+        widget: `<svg xmlns="http://www.w3.org/2000/svg" id="icon_統合前" viewBox="0 0 168 168">
+        <rect width="100%" height="100%" fill="#ff8a66"/>
+        <path d="M124,88c-2.21,0-4-1.79-4-4,0-19.85-16.15-36-36-36s-36,16.15-36,36c0,2.21-1.79,4-4,4s-4-1.79-4-4
+          c0-24.26,19.74-44,44-44s44,19.74,44,44c0,2.21-1.79,4-4,4Z" style="fill:#fff; stroke-width:0px;"/>
+        <circle cx="70" cy="85" r="6" style="fill:#fff; stroke-width:0px;"/>
+        <circle cx="98" cy="85" r="6" style="fill:#fff; stroke-width:0px;"/>
+        <path d="M38,71c-4.42,0-8,3.58-8,8v14c0,4.42,3.58,8,8,8h8c1.1,0,2-.9,2-2v-28h-10Z" style="fill:#fff; stroke-width:0px;"/>
+        <path d="M130,71h-10v28c0,1.1.9,2,2,2h8c4.42,0,8-3.58,8-8v-14c0-4.42-3.58-8-8-8Z" style="fill:#fff; stroke-width:0px;"/>
+        <path d="M114,122h-18c-1.1,0-2-.9-2-2s.9-2,2-2h18c5.51,0,10-4.49,10-10v-24c0-1.1.9-2,2-2s2,.9,2,2v24
+          c0,7.72-6.28,14-14,14Z" style="fill:#fff; stroke-width:0px;"/>
+        <rect x="85" y="117" width="18" height="6" rx="3" ry="3" style="fill:#fff; stroke-width:0px;"/>
+        <path d="M100,127h-12c-3.86,0-7-3.14-7-7s3.14-7,7-7h12c3.86,0,7,3.14,7,7s-3.14,7-7,7Z" style="fill:#fff; stroke-width:0px;"/>
+        <path d="M75.89,54.08c4.93,10.58,15.66,17.92,28.11,17.92,2.81,0,5.52-.38,8.11-1.08-4.93-10.58-15.66-17.92-28.11-17.92
+          -2.81,0-5.52.38-8.11,1.08Z" style="fill:#fff; stroke-width:0px;"/>
+      </svg>`
+      },
+
+      // 吹き出しに表示する初期メッセージ
+      firstMessage: "【24時間対応AIサポート】お困りごとがございましたらどうぞご利用ください。",
+
+      // ページを表示してから吹き出しが表示されるまでの待機時間（秒）
+      messagePreviewDelay: 1,
+
+      // 表示言語
+      locale: "jp"
+    };
+  </script>
+
+  <!-- 2) Chat Thingのウィジェット本体（テスト用を使用） -->
+  <script
+    src="https://chatthing.ai/chat-widget.js"
+    type="text/javascript"
+    id="ee4f0166-e22c-42ef-bd62-2c011f120001"
+    async
+    defer
+  ></script>
+
+  <!-- 3) Widgetをユーザーが展開したタイミングで、ページ上のユーザー情報を最初のメッセージとして自動送信 -->
+  <script>
+    // Chat Thing のウィジェット API を待ち受けて、初めて会話が開いた瞬間に
+    // TEST01 ページ上のユーザー情報をユーザー側メッセージとして送信する。
+    (function setupUserInfoMessage({ maxRetries = 100, delayMs = 120 } = {}) {
+      const readTextById = (id) => {
+        const element = document.getElementById(id);
+        return element?.textContent?.trim() ?? "";
+      };
+
+      const buildIntroMessage = () => {
+        const name = readTextById("chatthing-username");
+        const email = readTextById("chatthing-email");
+        const id = email;
+
+        if (!name && !email && !id) {
+          return "";
+        }
+
+        const greetingTarget = name || "ゲスト";
+        const lines = [`こんにちは！${greetingTarget}さん！`];
+
+        if (email || id) {
+          lines.push(`あなたのIDは${email || id}ですね！`);
+        }
+
+        return lines.join("\n");
+      };
+
+      const waitForWidget = (retriesLeft) => {
+        const api = window.chatThing;
+
+        if (!api) {
+          if (retriesLeft <= 0) {
+            console.error("[ChatThing] intro message failed: widget API timed out.");
+            return;
+          }
+
+          setTimeout(() => waitForWidget(retriesLeft - 1), delayMs);
+          return;
+        }
+
+        installHooks(api);
+      };
+
+      const installHooks = (api) => {
+        let messageSent = false;
+
+        const original = {
+          show: typeof api.show === "function" ? api.show.bind(api) : null,
+          toggle: typeof api.toggle === "function" ? api.toggle.bind(api) : null,
+          newConversation:
+            typeof api.newConversation === "function" ? api.newConversation.bind(api) : null,
+          sendMessage: typeof api.sendMessage === "function" ? api.sendMessage.bind(api) : null
+        };
+
+        const ensureMessageSent = () => {
+          if (messageSent) {
+            return true;
+          }
+
+          const message = buildIntroMessage();
+          if (!message) {
+            console.warn("[ChatThing] intro message skipped: user data not found on page.");
+            messageSent = true;
+            return true;
+          }
+
+          const sender = original.newConversation ?? original.sendMessage;
+          if (!sender) {
+            console.error(
+              "[ChatThing] intro message failed: neither newConversation nor sendMessage is available."
+            );
+            return false;
+          }
+
+          try {
+            sender(message);
+            messageSent = true;
+            console.log("[ChatThing] intro message sent:", message);
+            return true;
+          } catch (error) {
+            console.error("[ChatThing] intro message error:", error);
+            return false;
+          }
+        };
+
+        const wrapAndReplace = (methodName, originalMethod) => {
+          if (!originalMethod) {
+            return;
+          }
+
+          api[methodName] = (...args) => {
+            if (!messageSent) {
+              ensureMessageSent();
+            }
+            return originalMethod(...args);
+          };
+        };
+
+        wrapAndReplace("show", original.show);
+        wrapAndReplace("toggle", original.toggle);
+        wrapAndReplace("sendMessage", original.sendMessage);
+
+        if (original.newConversation) {
+          api.newConversation = (...args) => {
+            if (!messageSent) {
+              ensureMessageSent();
+            }
+            return original.newConversation(...args);
+          };
+        }
+
+        if (document.body) {
+          const observer = new MutationObserver(() => {
+            if (messageSent) {
+              return;
+            }
+
+            const maybeOpen = document.querySelector(
+              '[data-chatthing-window-open="true"], .chatthing-window--open, .chatthing-window[open]'
+            );
+
+            if (maybeOpen) {
+              ensureMessageSent();
+            }
+          });
+
+          observer.observe(document.body, {
+            attributes: true,
+            childList: true,
+            subtree: true
+          });
+
+          const stopWhenDone = () => {
+            if (messageSent) {
+              observer.disconnect();
+              return;
+            }
+            requestAnimationFrame(stopWhenDone);
+          };
+
+          stopWhenDone();
+        }
+      };
+
+      const start = () => waitForWidget(maxRetries);
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", start);
+      } else {
+        start();
+      }
+    })({ maxRetries: 150, delayMs: 150 });
+  </script>
+</body>
+</html>
