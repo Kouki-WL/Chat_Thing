@@ -164,6 +164,8 @@
 
   <!-- 3) Widgetをユーザーが展開したタイミングで、ページ上のユーザー情報を最初のメッセージとして自動送信 -->
   <script>
+    // Chat Thing のウィジェット API を待ち受けて、初めて会話が開いた瞬間に
+    // TEST01 ページ上のユーザー情報をユーザー側メッセージとして送信する。
     (function setupUserInfoMessage({ maxRetries = 100, delayMs = 120 } = {}) {
       const readTextById = (id) => {
         const element = document.getElementById(id);
